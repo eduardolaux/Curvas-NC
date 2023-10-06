@@ -1,0 +1,116 @@
+# Programar código para:
+    # 1) Comparar valores medidos com curvas NC;
+    # 2) Declarar em qual curva os valores se encontram.
+
+#%% Definições gerais:
+    
+# LIMPANDO AS VARIÁVEIS
+from IPython import get_ipython
+get_ipython().magic('reset -sf')
+
+
+#%%
+import numpy as np
+import math
+import cmath                  # Permite operações de senos e cossenos com números complexos
+import matplotlib.pyplot as plt # importa a biblioteca do plot
+import scipy.special as sp
+import pandas as pd
+from scipy import interpolate
+
+#%% PASTA DE ORIGEM
+base: str = "C:\\Users\Documents\"  # Pasta de base do arquivo
+destino = (base + r'\LAeq.xlsx')    # Nome do arquivo
+
+#%%
+# =============================================================================
+# CURVAS DE CRITÉRIO DE RUÍDO:
+# =============================================================================
+# Gerando dataframe a partir da planilha excel em que o arquivo se encontra
+NC =  pd.read_excel(destino, 
+                             sheet_name = 'Resultados', 
+                             usecols='I:Q',
+                             skiprows=20, 	    # Pula as linhas especificadas da tabela
+                             nrows=14-2)
+
+# Converta o DataFrame em um array NumPy
+NCarray = NC.values
+
+#%% DIURNO
+# =============================================================================
+# Lint TOTAL:
+# =============================================================================
+LintT =  pd.read_excel(destino, 
+                             sheet_name = 'Resultados', 
+                             usecols='I:Q',
+                             skiprows=34, 	    # Pula as linhas especificadas da tabela
+                             nrows=1).T
+LintT = pd.DataFrame(LintT.values[1:], columns=LintT.iloc[0])
+
+# Converta o DataFrame em um array NumPy
+LintTarray = LintT.values.T
+
+# Achatar a estrutura para uma lista simples
+LintTarray = LintTarray.ravel()
+# Converter a lista de strings para um array de int64
+LintTarray = np.array(LintTarray, dtype=float)
+#%% DIURNO
+# =============================================================================
+# Lint RESIDUAL:
+# =============================================================================
+LintR =  pd.read_excel(destino, 
+                             sheet_name = 'Resultados', 
+                             usecols='I:Q',
+                             skiprows=35, 	    # Pula as linhas especificadas da tabela
+                             nrows=1).T
+LintR = pd.DataFrame(LintR.values[1:], columns=LintR.iloc[0])
+
+# Converta o DataFrame em um array NumPy
+LintRarray = LintR.values.T
+
+# Achatar a estrutura para uma lista simples
+LintRarray = LintRarray.ravel()
+# Converter a lista de strings para um array de int64
+LintRarray = np.array(LintRarray, dtype=float)
+
+#%%
+
+# Inicializar uma lista para armazenar os índices das linhas que atendem ao critério
+linhas_atendidas = []
+
+
+#%% ENCONTRANDO CURVA DE RUÍDO NC PARA RUÍDO TOTAL
+
+# Inicializar uma variável para acompanhar se encontramos uma linha que atenda ao critério
+linha_encontrada = False
+
+# Iterar pelas linhas da NCarray a partir da segunda posição
+for i in range(NCarray.shape[0]):
+    linha = NCarray[i, 1:]  # Selecionar a linha da segunda posição em diante
+    
+    if all(LintTarray <= linha):
+        linha_encontrada = True
+        print("O Lint Total encontra-se na curva de ruído NC =", NCarray[i, 0])
+        break  # Interromper o loop assim que a linha for encontrada
+
+# Verificar se uma linha que atenda ao critério foi encontrada
+if not linha_encontrada:
+    print("Nenhuma linha atende ao critério.")
+
+#%% ENCONTRANDO CURVA DE RUÍDO NC PARA RUÍDO RESIDUAL
+
+# Inicializar uma variável para acompanhar se encontramos uma linha que atenda ao critério
+linha_encontrada = False
+
+# Iterar pelas linhas da NCarray a partir da segunda posição
+for i in range(NCarray.shape[0]):
+    linha = NCarray[i, 1:]  # Selecionar a linha da segunda posição em diante
+    
+    if all(LintRarray <= linha):
+        linha_encontrada = True
+        print("O Lint Residual encontra-se na curva de ruído NC =", NCarray[i, 0])
+        break  # Interromper o loop assim que a linha for encontrada
+
+# Verificar se uma linha que atenda ao critério foi encontrada
+if not linha_encontrada:
+    print("Nenhuma linha atende ao critério.")
